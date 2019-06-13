@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29001.49
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F4E48FBD-E19A-46B9-955B-A74214450858}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{350509EC-89FE-4971-9487-99194F98BCDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TStack.MongoDB", "src\TStack.MongoDB\TStack.MongoDB.csproj", "{93ED537B-A416-49FB-B5F2-D4086042DE31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TStack.MongoDB.Tests", "tests\TStack.MongoDB.Tests\TStack.MongoDB.Tests.csproj", "{32C0D591-050F-4789-8E16-9D7775C1D28C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{93ED537B-A416-49FB-B5F2-D4086042DE31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93ED537B-A416-49FB-B5F2-D4086042DE31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93ED537B-A416-49FB-B5F2-D4086042DE31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93ED537B-A416-49FB-B5F2-D4086042DE31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32C0D591-050F-4789-8E16-9D7775C1D28C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32C0D591-050F-4789-8E16-9D7775C1D28C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32C0D591-050F-4789-8E16-9D7775C1D28C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32C0D591-050F-4789-8E16-9D7775C1D28C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{93ED537B-A416-49FB-B5F2-D4086042DE31} = {F4E48FBD-E19A-46B9-955B-A74214450858}
+		{32C0D591-050F-4789-8E16-9D7775C1D28C} = {350509EC-89FE-4971-9487-99194F98BCDC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F468BBE3-71A9-42A0-86FE-9AEDDD0E5F2B}
+	EndGlobalSection
+EndGlobal
