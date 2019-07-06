@@ -70,8 +70,9 @@ namespace TStack.MongoDB
             }
             return genricTypedList;
         }
-
-        //Expression<Func<TEntity, bool>> 
-        //Expression<Func<TEntity, bool>> 
+        internal static string GetMemberName<T,T2>(this Expression<Func<T,T2>> expression)
+        {
+           return (expression.Body as MemberExpression).Member.Name;
+        }
     }
 }

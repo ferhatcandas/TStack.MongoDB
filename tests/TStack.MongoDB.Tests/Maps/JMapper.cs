@@ -11,9 +11,8 @@ namespace TStack.MongoDB.Tests.Maps
     {
         public JMapper() 
         {
-            AddRule(new Rule<Person>().Name("test2").Key("Id").RelationKey("PersonId").WithOne(x => x.PersonDetail));
-            AddRule(new Rule<Person>().Name("test").Key("Id").RelationKey("PersonId").WithCollection(x => x.Addresses));
-
+            Rule().Name("test2").Key(x=>x.Id).RelationKey("PersonId").WithOne(x => x.PersonDetail);
+            //Rule().Name("test").Key("Id").RelationKey("PersonId").WithCollection(x => x.Addresses);
         }
     }
 }
