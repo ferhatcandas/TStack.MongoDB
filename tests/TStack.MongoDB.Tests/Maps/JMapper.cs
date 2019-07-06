@@ -12,7 +12,7 @@ namespace TStack.MongoDB.Tests.Maps
         public JMapper() 
         {
             Rule().Name("test2").Key(x=>x.Id).RelationKey("PersonId").WithOne(x => x.PersonDetail);
-            //Rule().Name("test").Key("Id").RelationKey("PersonId").WithCollection(x => x.Addresses);
+            Rule().Name("test").Key("Id").RelationKey("PersonId").WithCollection(x => x.Addresses);
         }
     }
 }

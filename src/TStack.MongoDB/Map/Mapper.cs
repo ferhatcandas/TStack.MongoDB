@@ -68,10 +68,10 @@ namespace TStack.MongoDB.Map
         /// </summary>
         /// <param name="relationKey"></param>
         /// <returns></returns>
-        public Mapper<TEntity> RelationKey(string relationKey)
+        public void RelationKey(string relationKey)
         {
             _rule.RelationKey(relationKey);
-            return this;
+            AddRule();
         }
         /// <summary>
         /// make relation one with selected object
