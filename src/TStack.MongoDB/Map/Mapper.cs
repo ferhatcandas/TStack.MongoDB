@@ -25,10 +25,10 @@ namespace TStack.MongoDB.Map
         /// <returns></returns>
         public Mapper<TEntity> Rule(string ruleName)
         {
-            if (Rules.Any(x => x.RuleName == ruleName))
+            if (Rules.Any(x => x.Name == ruleName))
                 throw new ArgumentException($"{nameof(ruleName)} is exist on rule list");
             _rule = new Rule<TEntity>();
-            _rule.Name(ruleName);
+            _rule.SetName(ruleName);
             return this;
         }
         /// <summary>
@@ -86,7 +86,7 @@ namespace TStack.MongoDB.Map
             where TField : IMongoEntity
         {
             _rule.WithOne(expression);
-            _rule.RelationKey(relationKey.GetMemberName());
+            RelationKey(relationKey.GetMemberName());
         }
         /// make relation many with selected object
         /// </summary>
@@ -106,7 +106,7 @@ namespace TStack.MongoDB.Map
             where TField : IMongoEntity
         {
             _rule.WithCollection(expression);
-            _rule.RelationKey(relationKey.GetMemberName());
+            RelationKey(relationKey.GetMemberName());
         }
         /// <summary>
         /// add rule to list if is valid
@@ -116,7 +116,9 @@ namespace TStack.MongoDB.Map
             _rule.RuleIsValid();
             Rules.Add(_rule);
         }
+        internal IEnumerable<Rule<TEntity>> GetFilters(Func<Rule<TEntity>, bool> ruleExpression)
+        {
+            return Rules.Where(ruleExpression);
+        }
     }
-
-
 }

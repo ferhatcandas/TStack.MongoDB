@@ -11,11 +11,10 @@ namespace TStack.MongoDB.Tests.Entity
         {
 
         }
-        public PersonDetail(string personId,string email, string phone)
+        public PersonDetail(string email, string phone)
         {
             Email = email;
             Phone = phone;
-            PersonId = personId;
         }
         public string PersonId { get; set; }
         public string Email { get; set; }

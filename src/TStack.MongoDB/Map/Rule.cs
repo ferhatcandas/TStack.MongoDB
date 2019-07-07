@@ -11,15 +11,16 @@ namespace TStack.MongoDB.Map
     public class Rule<TEntity>
            where TEntity : IMongoEntity
     {
-        internal string RuleName { get; private set; }
+        public string Name { get; private set; }
         internal string PrimaryKey { get; set; } = "Id";
         internal string LocalFieldName { get; set; }
         internal string TargetKey { get; set; }
         internal Type TargetType { get; set; }
         internal RelationType RelationType { get; set; } = RelationType.None;
-        internal Rule<TEntity> Name(string ruleName)
+
+        internal Rule<TEntity> SetName(string ruleName)
         {
-            RuleName = ruleName;
+            Name = ruleName;
             return this;
         }
         /// <summary>

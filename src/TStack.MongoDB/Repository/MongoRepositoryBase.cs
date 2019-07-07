@@ -1,8 +1,7 @@
 ﻿using MongoDB.Driver;
-using Polly;
-using Polly.Retry;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -41,181 +40,318 @@ namespace TStack.MongoDB.Repository
     {
         private readonly TContext _context;
         private readonly IMapper _mapper;
-
         public MongoRepositoryBase()
         {
             _context = new TContext();
             Collection = Database<TEntity>.GetCollectionFromMongoConnection(_context);
             _mapper = new IMapper();
         }
+        #region Insert
+        public void Insert(TEntity entity, Func<Rule<TEntity>, bool> rule)
+        {
+            Collection.InsertOne(entity);
+            Importer(entity, rule, GetMethodName());
+        }
+
+        //public async Task InsertAsync(TEntity entity) => await Collection.InsertOneAsync(entity);
+        public void Insert(IEnumerable<TEntity> entities, Func<Rule<TEntity>, bool> rule)
+        {
+            Collection.InsertMany(entities);
+            Importer(entities, rule, GetMethodName());
+        }
+
+        //public async Task InsertAsync(IEnumerable<TEntity> entities) => await Collection.InsertManyAsync(entities);
+        #endregion Insert
+
+        #region Replace
+        //public bool Replace(TEntity entity) => Collection.ReplaceOne(i => i.Id == entity.Id, entity).IsAcknowledged;
+        //public async Task<bool> ReplaceAsync(TEntity entity)
+        //{
+        //    return await Task.Run(() =>
+        //    {
+        //        return Replace(entity);
+        //    });
+        //}
+        //public void Replace(IEnumerable<TEntity> entities)
+        //{
+        //    foreach (TEntity entity in entities)
+        //        Replace(entity);
+        //}
+
+        #endregion Replace
+
+        #region Update
+        //public bool Update<TField>(TEntity entity, Expression<Func<TEntity, TField>> field, TField value)
+        //{
+        //    return Update(entity, Updater.Set(field, value));
+        //}
+        //public Task<bool> UpdateAsync<TField>(TEntity entity, Expression<Func<TEntity, TField>> field, TField value)
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        return Update(entity, Updater.Set(field, value));
+        //    });
+        //}
+        //public bool Update(string id, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    return Update(Filter.Eq(i => i.Id, id), updates);
+        //}
+        //public Task<bool> UpdateAsync(string id, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        return Update(Filter.Eq(i => i.Id, id), updates);
+        //    });
+        //}
+        //public bool Update(TEntity entity, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    return Update(entity.Id, updates);
+        //}
+        //public Task<bool> UpdateAsync(TEntity entity, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        return Update(entity.Id, updates);
+        //    });
+        //}
+        //public bool Update<TField>(FilterDefinition<TEntity> filter, Expression<Func<TEntity, TField>> field, TField value)
+        //{
+        //    return Update(filter, Updater.Set(field, value));
+        //}
+        //public Task<bool> UpdateAsync<TField>(FilterDefinition<TEntity> filter, Expression<Func<TEntity, TField>> field, TField value)
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        return Update(filter, Updater.Set(field, value));
+        //    });
+        //}
+        //public bool Update(FilterDefinition<TEntity> filter, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    var update = Updater.Combine(updates);//.CurrentDate(i => i.UpdateAt);
+        //    return Collection.UpdateMany(filter, update/*.CurrentDate(i => i.UpdateAt)*/).IsAcknowledged;
+        //}
+        //public async Task<bool> UpdateAsync(FilterDefinition<TEntity> filter, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    return await Task.Run(() =>
+        //    {
+        //        return Update(filter, updates);
+        //    });
+        //}
+        //public bool Update(Expression<Func<TEntity, bool>> filter, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    var update = Updater.Combine(updates);//.CurrentDate(i => i.UpdateAt);
+        //    return Collection.UpdateMany(filter, update).IsAcknowledged;
+        //}
+        //public async Task<bool> UpdateAsync(Expression<Func<TEntity, bool>> filter, params UpdateDefinition<TEntity>[] updates)
+        //{
+        //    return await Task.Run(() =>
+        //    {
+        //        return Update(filter, updates);
+        //    });
+        //}
+
+        #endregion Update
+
+        #region Read
+
         public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter, Func<Rule<TEntity>, bool> rule)
         {
             var list = Find(filter);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter, int pageIndex, int size, Func<Rule<TEntity>, bool> rule)
         {
             var list = Find(filter, pageIndex, size);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, int pageIndex, int size, Func<Rule<TEntity>, bool> rule)
         {
             var list = Find(filter, order, pageIndex, size);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, int pageIndex, int size, bool isDescending, Func<Rule<TEntity>, bool> rule)
         {
             var list = Find(filter, order, pageIndex, size);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> FindAll(Func<Rule<TEntity>, bool> rule)
         {
             var list = FindAll();
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> FindAll(int pageIndex, int size, Func<Rule<TEntity>, bool> rule)
         {
             var list = FindAll(pageIndex, size);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> FindAll(Expression<Func<TEntity, object>> order, int pageIndex, int size, Func<Rule<TEntity>, bool> rule)
         {
             var list = FindAll(order, pageIndex, size);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public IEnumerable<TEntity> FindAll(Expression<Func<TEntity, object>> order, int pageIndex, int size, bool isDescending, Func<Rule<TEntity>, bool> rule)
         {
             var list = FindAll(order, pageIndex, size, isDescending);
-            Includer(list, rule);
+            Exporter(list, rule, GetMethodName());
             return list;
         }
 
         public TEntity First(Func<Rule<TEntity>, bool> rule)
         {
             var data = First();
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity First(Expression<Func<TEntity, bool>> filter, Func<Rule<TEntity>, bool> rule)
         {
             var data = First(filter);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity First(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, Func<Rule<TEntity>, bool> rule)
         {
             var data = First(filter, order);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity First(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, bool isDescending, Func<Rule<TEntity>, bool> rule)
         {
             var data = First(filter, order, isDescending);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity Get(string id, Func<Rule<TEntity>, bool> rule)
         {
             var data = Get(id);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity Last(Func<Rule<TEntity>, bool> rule)
         {
             var data = Last();
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity Last(Expression<Func<TEntity, bool>> filter, Func<Rule<TEntity>, bool> rule)
         {
             var data = Last(filter);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity Last(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, Func<Rule<TEntity>, bool> rule)
         {
             var data = Last(filter, order);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
 
         public TEntity Last(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, bool isDescending, Func<Rule<TEntity>, bool> rule)
         {
             var data = Last(filter, order, isDescending);
-            Includer(data, rule);
+            Exporter(data, rule, GetMethodName());
             return data;
         }
-        private void Includer(IEnumerable<TEntity> entities, Func<Rule<TEntity>, bool> rule)
+        #endregion
+        private void Importer(TEntity entity, Func<Rule<TEntity>, bool> rule, string methodName)
+        {
+            var filters = _mapper.GetFilters(rule);
+
+            if (filters?.Count() > 0)
+                foreach (var filter in filters)
+                {
+                    var primaryKeyValue = entity.GetPropertyValue<string>(filter.PrimaryKey);
+
+                    var relatedField = entity.GetPropertyValue(filter.LocalFieldName);
+
+                    SetValueFromDynamicRepository(filter, primaryKeyValue, relatedField, methodName);
+
+
+
+
+
+
+                }
+        }
+        private void Importer(IEnumerable<TEntity> entities, Func<Rule<TEntity>, bool> rule, string methodName)
+        {
+            foreach (var entity in entities)
+                Importer(entity, rule, methodName);
+        }
+        private void Exporter(IEnumerable<TEntity> entities, Func<Rule<TEntity>, bool> rule, string methodName)
         {
             foreach (var item in entities)
-                Includer(item, rule);
+                Exporter(item, rule, methodName);
         }
-        private void Includer(TEntity entity, Func<Rule<TEntity>, bool> rule)
+        private void Exporter(TEntity entity, Func<Rule<TEntity>, bool> rule, string methodName)
         {
-            var filters = _mapper.Rules.Where(rule);
+            var filters = _mapper.GetFilters(rule);
 
-            if (filters.Count() > 0)
-            {
-                foreach (var filt in filters)
+            if (filters?.Count() > 0)
+                foreach (var filter in filters)
                 {
-                    var filterValue = entity.GetPropertyValue(filt.PrimaryKey);
-
-                    var repository = filt.TargetType.GetRepositoryFromType(_context);
-
-                    object value = null;
-                    switch (filt.RelationType)
-                    {
-                        case RelationType.One:
-                            value = GetValueItemFromDynamicRepository(repository, filt.TargetType, filt.TargetKey, filterValue);
-                            break;
-                        case RelationType.Collection:
-                            value = GetValueCollectionFromDynamicRepository(repository, filt.TargetType, filt.TargetKey, filterValue);
-                            break;
-                    }
-                    entity.SetPropertyValue(filt.LocalFieldName, value);
+                    var primaryKeyValue = entity.GetPropertyValue<string>(filter.PrimaryKey);
+                    object value = GetValueFromDynamicRepository(filter, primaryKeyValue, methodName);
+                    entity.SetPropertyValue(filter.LocalFieldName, value);
                 }
+        }
+        private void SetValueFromDynamicRepository(Rule<TEntity> filter, string relationValue, object relatedField, string methodName)
+        {
+            var repository = filter.TargetType.GetRepositoryInstanceFromType(_context);
+            switch (filter.RelationType)
+            {
+                case RelationType.One:
+                    relatedField.SetPropertyValue(filter.TargetKey, relationValue);
+                    break;
+                case RelationType.Collection:
+                    var foreachMethod = relatedField.GetType().GetMethod("ForEach");
+                    var expression = filter.TargetType.GetExpressionv2(filter.TargetKey, relationValue);
+                    foreachMethod.Invoke(relatedField, new object[] { expression });
+                    //personAddresses.ForEach(x => x.PersonId = person.Id);
+                    break;
             }
+            //MethodInfo method = repository.GetFilterMethod(methodName);
+
+            //method.Invoke(repository, new object[] { relatedField });
         }
-        private object GetValueCollectionFromDynamicRepository(object repository, Type targetType, string targetKey, string targetValue)
+        private object GetValueFromDynamicRepository(Rule<TEntity> filter, string filterValue, string methodName)
         {
-
-            var method = repository.GetFilterMethod("Find");
-
-            var expr = targetType.GetExpression(targetKey, targetValue);
-
-            var value = ((IEnumerable<object>)method.Invoke(repository, new object[] { expr })).ToList();
-
-            return value.ObjectListToSpecificTypeList(targetType);
+            var repository = filter.TargetType.GetRepositoryInstanceFromType(_context);
+            object value = null;
+            MethodInfo method = repository.GetFilterMethod(methodName);
+            var expression = filter.TargetType.GetExpression(filter.TargetKey, filterValue);
+            switch (filter.RelationType)
+            {
+                case RelationType.One:
+                    value = method.Invoke(repository, new object[] { expression });
+                    break;
+                case RelationType.Collection:
+                    value = ((IEnumerable<object>)method.Invoke(repository, new object[] { expression })).ToList().ObjectListToSpecificTypeList(filter.TargetType);
+                    break;
+            }
+            return value;
         }
-        private object GetValueItemFromDynamicRepository(object repository, Type targetType, string targetKey, string targetValue)
-        {
-            var method = repository.GetFilterMethod("First");
-
-            var expr = targetType.GetExpression(targetKey, targetValue);
-
-            return method.Invoke(repository, new object[] { expr });
-        }
+        private string GetMethodName() => new StackTrace(1).GetFrame(0).GetMethod().Name;
     }
     public class MongoRepositoryBase<TEntity> : IMongoRepository<TEntity>
      where TEntity : IMongoEntity
@@ -277,62 +413,53 @@ namespace TStack.MongoDB.Repository
         /// delete by id
         /// </summary>
         /// <param name="id">id</param>
-        public virtual bool Delete(string id) => Retry(() =>
-        {
-            return Collection.DeleteOne(i => i.Id == id).IsAcknowledged;
-        });
+        public bool Delete(string id) => Collection.DeleteOne(i => i.Id == id).IsAcknowledged;
 
         /// <summary>
         /// delete by id
         /// </summary>
         /// <param name="id">id</param>
-        public virtual Task<bool> DeleteAsync(string id) => Retry(() =>
+        public async Task<bool> DeleteAsync(string id)
         {
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
                 return Delete(id);
             });
-        });
+        }
 
         /// <summary>
         /// delete items with filter
         /// </summary>
         /// <param name="filter">expression filter</param>
-        public bool Delete(Expression<Func<TEntity, bool>> filter) => Retry(() =>
-        {
-            return Collection.DeleteMany(filter).IsAcknowledged;
-        });
+        public bool Delete(Expression<Func<TEntity, bool>> filter) => Collection.DeleteMany(filter).IsAcknowledged;
 
         /// <summary>
         /// delete items with filter
         /// </summary>
         /// <param name="filter">expression filter</param>
-        public Task<bool> DeleteAsync(Expression<Func<TEntity, bool>> filter) => Retry(() =>
+        public async Task<bool> DeleteAsync(Expression<Func<TEntity, bool>> filter)
         {
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
                 return Delete(filter);
             });
-        });
+        }
 
         /// <summary>
         /// delete all documents
         /// </summary>
-        public virtual bool DeleteAll() => Retry(() =>
-        {
-            return Collection.DeleteMany(Filter.Empty).IsAcknowledged;
-        });
+        public bool DeleteAll() => Collection.DeleteMany(Filter.Empty).IsAcknowledged;
 
         /// <summary>
         /// delete all documents
         /// </summary>
-        public virtual Task<bool> DeleteAllAsync() => Retry(() =>
+        public async Task<bool> DeleteAllAsync()
         {
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
                 return DeleteAll();
             });
-        });
+        }
         #endregion Delete
 
         #region Find
@@ -342,7 +469,7 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="filter">expression filter</param>
         /// <returns>collection of entity</returns>
-        public virtual IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter) => Query(filter).ToEnumerable();
+        public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter) => Query(filter).ToEnumerable();
 
         /// <summary>
         /// find entities with paging
@@ -379,13 +506,10 @@ namespace TStack.MongoDB.Repository
         /// <param name="size">number of items in page</param>
         /// <param name="isDescending">ordering direction</param>
         /// <returns>collection of entity</returns>
-        public virtual IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, int pageIndex, int size, bool isDescending)
+        public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, int pageIndex, int size, bool isDescending)
         {
-            return Retry(() =>
-            {
-                var query = Query(filter).Skip(pageIndex * size).Limit(size);
-                return (isDescending ? query.SortByDescending(order) : query.SortBy(order)).ToEnumerable();
-            });
+            var query = Query(filter).Skip(pageIndex * size).Limit(size);
+            return (isDescending ? query.SortByDescending(order) : query.SortBy(order)).ToEnumerable();
         }
 
         #endregion Find
@@ -396,13 +520,7 @@ namespace TStack.MongoDB.Repository
         /// fetch all items in collection
         /// </summary>
         /// <returns>collection of entity</returns>
-        public virtual IEnumerable<TEntity> FindAll()
-        {
-            return Retry(() =>
-            {
-                return Query().ToEnumerable();
-            });
-        }
+        public IEnumerable<TEntity> FindAll() => Query().ToEnumerable();
 
         /// <summary>
         /// fetch all items in collection with paging
@@ -436,13 +554,10 @@ namespace TStack.MongoDB.Repository
         /// <param name="size">number of items in page</param>
         /// <param name="isDescending">ordering direction</param>
         /// <returns>collection of entity</returns>
-        public virtual IEnumerable<TEntity> FindAll(Expression<Func<TEntity, object>> order, int pageIndex, int size, bool isDescending)
+        public IEnumerable<TEntity> FindAll(Expression<Func<TEntity, object>> order, int pageIndex, int size, bool isDescending)
         {
-            return Retry(() =>
-            {
-                var query = Query().Skip(pageIndex * size).Limit(size);
-                return (isDescending ? query.SortByDescending(order) : query.SortBy(order)).ToEnumerable();
-            });
+            var query = Query().Skip(pageIndex * size).Limit(size);
+            return (isDescending ? query.SortByDescending(order) : query.SortBy(order)).ToEnumerable();
         }
 
         #endregion FindAll
@@ -493,6 +608,40 @@ namespace TStack.MongoDB.Repository
 
         #endregion First
 
+        #region Last
+
+        /// <summary>
+        /// get first item in collection
+        /// </summary>
+        /// <returns>entity of <typeparamref name="T"/></returns>
+        public TEntity Last() => FindAll(i => i.Id, 0, 1, true).FirstOrDefault();
+
+        /// <summary>
+        /// get last item in query
+        /// </summary>
+        /// <param name="filter">expression filter</param>
+        /// <returns>entity of <typeparamref name="T"/></returns>
+        public TEntity Last(Expression<Func<TEntity, bool>> filter) => Last(filter, i => i.Id);
+
+        /// <summary>
+        /// get last item in query with order
+        /// </summary>
+        /// <param name="filter">expression filter</param>
+        /// <param name="order">ordering parameters</param>
+        /// <returns>entity of <typeparamref name="T"/></returns>
+        public TEntity Last(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order) => Last(filter, order, false);
+
+        /// <summary>
+        /// get last item in query with order and direction
+        /// </summary>
+        /// <param name="filter">expression filter</param>
+        /// <param name="order">ordering parameters</param>
+        /// <param name="isDescending">ordering direction</param>
+        /// <returns>entity of <typeparamref name="T"/></returns>
+        public TEntity Last(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, bool isDescending) => First(filter, order, !isDescending);
+
+        #endregion Last
+
         #region Get
 
         /// <summary>
@@ -500,13 +649,7 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="id">id value</param>
         /// <returns>entity of <typeparamref name="T"/></returns>
-        public virtual TEntity Get(string id)
-        {
-            return Retry(() =>
-            {
-                return Find(i => i.Id == id).FirstOrDefault();
-            });
-        }
+        public TEntity Get(string id) => Find(i => i.Id == id).FirstOrDefault();
 
         #endregion Get
 
@@ -516,98 +659,26 @@ namespace TStack.MongoDB.Repository
         /// insert entity
         /// </summary>
         /// <param name="entity">entity</param>
-        public virtual void Insert(TEntity entity)
-        {
-            Retry(() =>
-            {
-                Collection.InsertOne(entity);
-                return true;
-            });
-        }
+        public void Insert(TEntity entity) => Collection.InsertOne(entity);
 
         /// <summary>
         /// insert entity
         /// </summary>
         /// <param name="entity">entity</param>
-        public virtual Task InsertAsync(TEntity entity)
-        {
-            return Retry(() =>
-            {
-                return Collection.InsertOneAsync(entity);
-            });
-        }
+        public async Task InsertAsync(TEntity entity) => await Collection.InsertOneAsync(entity);
 
         /// <summary>
         /// insert entity collection
         /// </summary>
         /// <param name="entities">collection of entities</param>
-        public virtual void Insert(IEnumerable<TEntity> entities)
-        {
-            Retry(() =>
-            {
-                Collection.InsertMany(entities);
-                return true;
-            });
-        }
+        public void Insert(IEnumerable<TEntity> entities) => Collection.InsertMany(entities);
 
         /// <summary>
         /// insert entity collection
         /// </summary>
         /// <param name="entities">collection of entities</param>
-        public virtual Task InsertAsync(IEnumerable<TEntity> entities)
-        {
-            return Retry(() =>
-            {
-                return Collection.InsertManyAsync(entities);
-            });
-        }
+        public async Task InsertAsync(IEnumerable<TEntity> entities) => await Collection.InsertManyAsync(entities);
         #endregion Insert
-
-        #region Last
-
-        /// <summary>
-        /// get first item in collection
-        /// </summary>
-        /// <returns>entity of <typeparamref name="T"/></returns>
-        public TEntity Last()
-        {
-            return FindAll(i => i.Id, 0, 1, true).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// get last item in query
-        /// </summary>
-        /// <param name="filter">expression filter</param>
-        /// <returns>entity of <typeparamref name="T"/></returns>
-        public TEntity Last(Expression<Func<TEntity, bool>> filter)
-        {
-            return Last(filter, i => i.Id);
-        }
-
-        /// <summary>
-        /// get last item in query with order
-        /// </summary>
-        /// <param name="filter">expression filter</param>
-        /// <param name="order">ordering parameters</param>
-        /// <returns>entity of <typeparamref name="T"/></returns>
-        public TEntity Last(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order)
-        {
-            return Last(filter, order, false);
-        }
-
-        /// <summary>
-        /// get last item in query with order and direction
-        /// </summary>
-        /// <param name="filter">expression filter</param>
-        /// <param name="order">ordering parameters</param>
-        /// <param name="isDescending">ordering direction</param>
-        /// <returns>entity of <typeparamref name="T"/></returns>
-        public TEntity Last(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> order, bool isDescending)
-        {
-            return First(filter, order, !isDescending);
-        }
-
-        #endregion Last
 
         #region Replace
 
@@ -615,26 +686,17 @@ namespace TStack.MongoDB.Repository
         /// replace an existing entity
         /// </summary>
         /// <param name="entity">entity</param>
-        public virtual bool Replace(TEntity entity)
-        {
-            return Retry(() =>
-            {
-                return Collection.ReplaceOne(i => i.Id == entity.Id, entity).IsAcknowledged;
-            });
-        }
+        public bool Replace(TEntity entity) => Collection.ReplaceOne(i => i.Id == entity.Id, entity).IsAcknowledged;
 
         /// <summary>
         /// replace an existing entity
         /// </summary>
         /// <param name="entity">entity</param>
-        public virtual Task<bool> ReplaceAsync(TEntity entity)
+        public async Task<bool> ReplaceAsync(TEntity entity)
         {
-            return Retry(() =>
+            return await Task.Run(() =>
             {
-                return Task.Run(() =>
-                {
-                    return Replace(entity);
-                });
+                return Replace(entity);
             });
         }
 
@@ -645,9 +707,7 @@ namespace TStack.MongoDB.Repository
         public void Replace(IEnumerable<TEntity> entities)
         {
             foreach (TEntity entity in entities)
-            {
                 Replace(entity);
-            }
         }
 
         #endregion Replace
@@ -688,7 +748,7 @@ namespace TStack.MongoDB.Repository
         /// <param name="id">id</param>
         /// <param name="updates">updated field(s)</param>
         /// <returns>true if successful, otherwise false</returns>
-        public virtual bool Update(string id, params UpdateDefinition<TEntity>[] updates)
+        public bool Update(string id, params UpdateDefinition<TEntity>[] updates)
         {
             return Update(Filter.Eq(i => i.Id, id), updates);
         }
@@ -698,7 +758,7 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="updates">updated field(s)</param>
-        public virtual Task<bool> UpdateAsync(string id, params UpdateDefinition<TEntity>[] updates)
+        public Task<bool> UpdateAsync(string id, params UpdateDefinition<TEntity>[] updates)
         {
             return Task.Run(() =>
             {
@@ -712,7 +772,7 @@ namespace TStack.MongoDB.Repository
         /// <param name="entity">entity</param>
         /// <param name="updates">updated field(s)</param>
         /// <returns>true if successful, otherwise false</returns>
-        public virtual bool Update(TEntity entity, params UpdateDefinition<TEntity>[] updates)
+        public bool Update(TEntity entity, params UpdateDefinition<TEntity>[] updates)
         {
             return Update(entity.Id, updates);
         }
@@ -722,7 +782,7 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="entity">entity</param>
         /// <param name="updates">updated field(s)</param>
-        public virtual Task<bool> UpdateAsync(TEntity entity, params UpdateDefinition<TEntity>[] updates)
+        public Task<bool> UpdateAsync(TEntity entity, params UpdateDefinition<TEntity>[] updates)
         {
             return Task.Run(() =>
             {
@@ -766,11 +826,8 @@ namespace TStack.MongoDB.Repository
         /// <returns>true if successful, otherwise false</returns>
         public bool Update(FilterDefinition<TEntity> filter, params UpdateDefinition<TEntity>[] updates)
         {
-            return Retry(() =>
-            {
-                var update = Updater.Combine(updates);//.CurrentDate(i => i.UpdateAt);
-                return Collection.UpdateMany(filter, update/*.CurrentDate(i => i.UpdateAt)*/).IsAcknowledged;
-            });
+            var update = Updater.Combine(updates);//.CurrentDate(i => i.UpdateAt);
+            return Collection.UpdateMany(filter, update/*.CurrentDate(i => i.UpdateAt)*/).IsAcknowledged;
         }
 
         /// <summary>
@@ -778,14 +835,11 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="filter">collection filter</param>
         /// <param name="updates">updated field(s)</param>
-        public Task<bool> UpdateAsync(FilterDefinition<TEntity> filter, params UpdateDefinition<TEntity>[] updates)
+        public async Task<bool> UpdateAsync(FilterDefinition<TEntity> filter, params UpdateDefinition<TEntity>[] updates)
         {
-            return Retry(() =>
+            return await Task.Run(() =>
             {
-                return Task.Run(() =>
-                {
-                    return Update(filter, updates);
-                });
+                return Update(filter, updates);
             });
         }
 
@@ -797,11 +851,8 @@ namespace TStack.MongoDB.Repository
         /// <returns>true if successful, otherwise false</returns>
         public bool Update(Expression<Func<TEntity, bool>> filter, params UpdateDefinition<TEntity>[] updates)
         {
-            return Retry(() =>
-            {
-                var update = Updater.Combine(updates);//.CurrentDate(i => i.UpdateAt);
-                return Collection.UpdateMany(filter, update).IsAcknowledged;
-            });
+            var update = Updater.Combine(updates);//.CurrentDate(i => i.UpdateAt);
+            return Collection.UpdateMany(filter, update).IsAcknowledged;
         }
 
         /// <summary>
@@ -809,14 +860,11 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="filter">collection filter</param>
         /// <param name="updates">updated field(s)</param>
-        public Task<bool> UpdateAsync(Expression<Func<TEntity, bool>> filter, params UpdateDefinition<TEntity>[] updates)
+        public async Task<bool> UpdateAsync(Expression<Func<TEntity, bool>> filter, params UpdateDefinition<TEntity>[] updates)
         {
-            return Retry(() =>
+            return await Task.Run(() =>
             {
-                return Task.Run(() =>
-                {
-                    return Update(filter, updates);
-                });
+                return Update(filter, updates);
             });
         }
 
@@ -831,13 +879,7 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="filter">expression filter</param>
         /// <returns>true if exists, otherwise false</returns>
-        public bool Any(Expression<Func<TEntity, bool>> filter)
-        {
-            return Retry(() =>
-            {
-                return First(filter) != null;
-            });
-        }
+        public bool Any(Expression<Func<TEntity, bool>> filter) => First(filter) != null;
 
         #region Count
         /// <summary>
@@ -845,76 +887,32 @@ namespace TStack.MongoDB.Repository
         /// </summary>
         /// <param name="filter">expression filter</param>
         /// <returns>number of documents</returns>
-        public long Count(Expression<Func<TEntity, bool>> filter)
-        {
-            return Retry(() =>
-            {
-                return Collection.Count(filter);
-            });
-        }
+        public long Count(Expression<Func<TEntity, bool>> filter) => Collection.Count(filter);
 
         /// <summary>
         /// get number of filtered documents
         /// </summary>
         /// <param name="filter">expression filter</param>
         /// <returns>number of documents</returns>
-        public Task<long> CountAsync(Expression<Func<TEntity, bool>> filter)
+        public async Task<long> CountAsync(Expression<Func<TEntity, bool>> filter)
         {
-            return Retry(() =>
-            {
-                return Collection.CountAsync(filter);
-            });
+            return await Collection.CountAsync(filter);
         }
 
         /// <summary>
         /// get number of documents in collection
         /// </summary>
         /// <returns>number of documents</returns>
-        public long Count()
-        {
-            return Retry(() =>
-            {
-                return Collection.Count(Filter.Empty);
-            });
-        }
+        public long Count() => Collection.Count(Filter.Empty);
 
         /// <summary>
         /// get number of documents in collection
         /// </summary>
         /// <returns>number of documents</returns>
-        public Task<long> CountAsync()
-        {
-            return Retry(() =>
-            {
-                return Collection.CountAsync(Filter.Empty);
-            });
-        }
+        public async Task<long> CountAsync() => await Collection.CountAsync(Filter.Empty);
         #endregion Count
 
         #endregion Utils
 
-        #region RetryPolicy
-        /// <summary>
-        /// retry operation for three times if IOException occurs
-        /// </summary>
-        /// <typeparam name="TResult">return type</typeparam>
-        /// <param name="action">action</param>
-        /// <returns>action result</returns>
-        /// <example>
-        /// return Retry(() => 
-        /// { 
-        ///     do_something;
-        ///     return something;
-        /// });
-        /// </example>
-        protected virtual TEntityResult Retry<TEntityResult>(Func<TEntityResult> action)
-        {
-            return RetryPolicy
-                .Handle<MongoConnectionException>(i => i.InnerException.GetType() == typeof(IOException) ||
-                                                       i.InnerException.GetType() == typeof(SocketException))
-                .Retry(0)
-                .Execute(action);
-        }
-        #endregion
     }
 }

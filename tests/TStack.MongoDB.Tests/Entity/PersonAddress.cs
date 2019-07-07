@@ -12,9 +12,8 @@ namespace TStack.MongoDB.Tests.Entity
         {
 
         }
-        public PersonAddress(string personId, string street, string apartment, string city)
+        public PersonAddress(string street, string apartment, string city)
         {
-            PersonId = personId;
             Street = street;
             Apartment = apartment;
             City = city;
