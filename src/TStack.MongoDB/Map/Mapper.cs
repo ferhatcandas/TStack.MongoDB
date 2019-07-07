@@ -19,21 +19,15 @@ namespace TStack.MongoDB.Map
         internal List<Rule<TEntity>> Rules { get; set; }
         internal Rule<TEntity> _rule { get; set; }
         /// <summary>
-        /// create new rule
-        /// </summary>
-        /// <returns></returns>
-        public Mapper<TEntity> Rule()
-        {
-            _rule = new Rule<TEntity>();
-            return this;
-        }
-        /// <summary>
         /// ruleName for easyly access this rule
         /// </summary>
         /// <param name="ruleName"></param>
         /// <returns></returns>
-        public Mapper<TEntity> Name(string ruleName)
+        public Mapper<TEntity> Rule(string ruleName)
         {
+            if (Rules.Any(x => x.RuleName == ruleName))
+                throw new ArgumentException($"{nameof(ruleName)} is exist on rule list");
+            _rule = new Rule<TEntity>();
             _rule.Name(ruleName);
             return this;
         }
@@ -44,12 +38,10 @@ namespace TStack.MongoDB.Map
         /// <param name="expression"></param>
         /// <returns></returns>
         public Mapper<TEntity> Key<TField>(Expression<Func<TEntity, TField>> expression)
+        //where TField : struct
         {
             if (string.IsNullOrEmpty(_rule.PrimaryKey))
-            {
-                var fieldName = expression.GetMemberName();
-                _rule.Key(fieldName);
-            }
+                _rule.Key(expression.GetMemberName());
             return this;
         }
         /// <summary>
@@ -60,7 +52,7 @@ namespace TStack.MongoDB.Map
         public Mapper<TEntity> Key(string primaryKey)
         {
             if (string.IsNullOrEmpty(_rule.PrimaryKey))
-                _rule.Name(primaryKey);
+                _rule.Key(primaryKey);
             return this;
         }
         /// <summary>
@@ -78,22 +70,43 @@ namespace TStack.MongoDB.Map
         /// </summary>
         /// <typeparam name="TField"></typeparam>
         /// <param name="expression"></param>
-        public void WithOne<TField>(Expression<Func<TEntity, TField>> expression)
+        public Mapper<TEntity> WithOne<TField>(Expression<Func<TEntity, TField>> expression)
             where TField : IMongoEntity
         {
             _rule.WithOne(expression);
-            AddRule();
+            return this;
         }
+
         /// <summary>
+        /// make relation one with selected object and sets relation key
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        public void WithOne<TField>(Expression<Func<TEntity, TField>> expression, Expression<Func<TField, object>> relationKey)
+            where TField : IMongoEntity
+        {
+            _rule.WithOne(expression);
+            _rule.RelationKey(relationKey.GetMemberName());
+        }
         /// make relation many with selected object
         /// </summary>
         /// <typeparam name="TField"></typeparam>
         /// <param name="expression"></param>
-        public void WithCollection<TField>(Expression<Func<TEntity, List<TField>>> expression)
+        public Mapper<TEntity> WithCollection<TField>(Expression<Func<TEntity, List<TField>>> expression)
             where TField : IMongoEntity
         {
             _rule.WithCollection(expression);
-            AddRule();
+            return this;
+        }
+        /// make relation many with selected object and sets relation key
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        public void WithCollection<TField>(Expression<Func<TEntity, List<TField>>> expression, Expression<Func<TField, object>> relationKey)
+            where TField : IMongoEntity
+        {
+            _rule.WithCollection(expression);
+            _rule.RelationKey(relationKey.GetMemberName());
         }
         /// <summary>
         /// add rule to list if is valid

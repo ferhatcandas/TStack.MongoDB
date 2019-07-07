@@ -23,7 +23,7 @@ namespace TStack.MongoDB.Map
             return this;
         }
         /// <summary>
-        /// currentObject key parameter
+        /// currentObject key parameter default is Id
         /// </summary>
         /// <param name="primaryKey"></param>
         /// <returns></returns>
@@ -81,12 +81,18 @@ namespace TStack.MongoDB.Map
         internal void RuleIsValid()
         {
             if (string.IsNullOrEmpty(TargetKey))
-                throw new ArgumentNullException(TargetKey);
+                throw new ArgumentNullException($"{nameof(TargetKey)} must not be null");
             if (string.IsNullOrEmpty(PrimaryKey))
-                throw new ArgumentNullException(PrimaryKey);
+                throw new ArgumentNullException($"{nameof(PrimaryKey)} must not be null");
             var type = typeof(TEntity);
             if (type.GetProperty(PrimaryKey) == null)
                 throw new ArgumentException($"{type.Name} primary key is not found");
+            if (TargetType.GetProperty(TargetKey) == null)
+                throw new ArgumentException($"{TargetType.Name} relation key is not found");
+            else
+            {
+                //check targetkey is struct
+            }
         }
     }
 }
