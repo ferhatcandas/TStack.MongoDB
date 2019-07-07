@@ -18,7 +18,8 @@ namespace TStack.MongoDB.Repository
     /// <summary>
     /// repository implementation for mongo
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TContext"></typeparam>
     public abstract class MongoRepositoryBase<TEntity, TContext> : MongoRepositoryBase<TEntity>, IMongoRepository<TEntity>
         where TEntity : IMongoEntity
         where TContext : MongoConnection, new()
@@ -205,7 +206,7 @@ namespace TStack.MongoDB.Repository
 
             var value = ((IEnumerable<object>)method.Invoke(repository, new object[] { expr })).ToList();
 
-            return value.ObjectListToSpecificTypeList( targetType);
+            return value.ObjectListToSpecificTypeList(targetType);
         }
         private object GetValueItemFromDynamicRepository(object repository, Type targetType, string targetKey, string targetValue)
         {

@@ -17,6 +17,7 @@ namespace TStack.MongoDB.Tests.Tests
         private PersonRepository personRepository = new PersonRepository();
         private AddressRepository addressRepository = new AddressRepository();
         private PersonDetailRepository personDetailRepository = new PersonDetailRepository();
+        [Fact]
         public void Add_Record_To_Collection()
         {
             //Person person = new Person("ferhat", "candas", DateTime.Now.AddYears(-15), 2000.52);
@@ -28,12 +29,12 @@ namespace TStack.MongoDB.Tests.Tests
             //};
             //personRepository.Insert(person);
             //addressRepository.Insert(personAddresses);
-            personDetailRepository.Insert(new PersonDetail("5cdb4fd332ef854458a18270", "candasferhat61@gmail.com", "905379106194"));
+            //personDetailRepository.Insert(new PersonDetail("5cdb4fd332ef854458a18270", "candasferhat61@gmail.com", "905379106194"));
         }
         [Fact]
         public void MapperTest()
         {
-            var person = personRepository.First(x => x.Id == "5cdb4fd332ef854458a18270", x => x.RuleName == "test" || x.RuleName == "test2");
+            var person = personRepository.First((Rule<Person>)x=>x);
 
 
             //person.Include<ExMapper,PersonAddress>(x=>x.RuleName == "test");

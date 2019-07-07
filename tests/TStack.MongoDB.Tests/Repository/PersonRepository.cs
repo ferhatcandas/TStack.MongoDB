@@ -8,7 +8,7 @@ using TStack.MongoDB.Tests.Maps;
 
 namespace TStack.MongoDB.Tests.Repository
 {
-    public class PersonRepository : MongoRepositoryBase<Person, TestConnection,JMapper>
+    public class PersonRepository : MongoRepositoryBase<Person, TestConnection,PersonMapper>
     {
 
     }
