@@ -22,6 +22,7 @@ namespace TStack.MongoDB.Tests.Entity
         }
         public string Name { get; set; }
         public string Surname { get; set; }
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime BirthDate { get; set; }
         public double Salary { get; set; }
         [BsonIgnore]

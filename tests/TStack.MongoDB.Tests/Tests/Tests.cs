@@ -9,6 +9,7 @@ using TStack.MongoDB.Tests.Repository;
 using Xunit;
 using System.Linq;
 using System.Linq.Expressions;
+using FluentAssertions;
 
 namespace TStack.MongoDB.Tests.Tests
 {
@@ -18,36 +19,39 @@ namespace TStack.MongoDB.Tests.Tests
         private AddressRepository addressRepository = new AddressRepository();
         private PersonDetailRepository personDetailRepository = new PersonDetailRepository();
         [Fact]
-        public void Add_Record_To_Collection()
+        public void Insert_single_and_multiple_with_rule_success()
         {
-            //Person person = new Person("ferhat", "candas", DateTime.Now.AddYears(-15), 2000.52);
-            //List<PersonAddress> personAddresses = new List<PersonAddress>()
-            //{
-            //    new PersonAddress("Fatih mah","a","Istanbul"),
-            //    new PersonAddress("Kıvanc mah","b","Izmir"),
-            //    new PersonAddress("Kemaliye mah","c","Trabzon"),
-            //};
+            Person person = new Person("ferhat", "candas", DateTime.Now.AddYears(-15), 2000.52);
 
-            //var personDetail = new PersonDetail("candasferhat61@gmail.com", "905379106194");
-            //person.Addresses = personAddresses;
-            //person.PersonDetail = personDetail;
-            //personRepository.Insert(person, x => x.Name == "test" || x.Name == "test2");
+            List<PersonAddress> personAddresses = new List<PersonAddress>()
+            {
+                new PersonAddress("Fatih mah","a","Istanbul"),
+                new PersonAddress("Kıvanc mah","b","Izmir"),
+                new PersonAddress("Kemaliye mah","c","Trabzon"),
+            };
 
+            var personDetail = new PersonDetail("candasferhat61@gmail.com", "905379106194");
 
-            var personData = personRepository.First(x => x.Id == "5d23a3036f4bca70448cf6de", x => x.Name == "test" || x.Name == "test2");
+            person.Addresses = personAddresses;
 
-        }
-        //[Fact]
-        public void MapperTest()
-        {
-            var person = personRepository.First(x => x.Name == "test" || x.Name == "test2");
+            person.PersonDetail = personDetail;
 
+            personRepository.Insert(person, x => x.Name == "test" || x.Name == "test2");
 
-            //person.Include<ExMapper,PersonAddress>(x=>x.RuleName == "test");
+            var personData = personRepository.First(x => x.Id == person.Id, x => x.Name == "test" || x.Name == "test2");
 
-            //person.Include(manager);
-            //person.Include<PersonMapper<Person,PersonAddress>();
-            //person.Include(personMapper);
+            personData.Name.Should().Be(person.Name);
+            personData.Surname.Should().Be(person.Surname);
+            personData.BirthDate.ToString("dd MM yyyy HH:mm:ss").Should().Be(person.BirthDate.ToString("dd MM yyyy HH:mm:ss"));
+            personData.Salary.Should().Be(person.Salary);
+            personData.Id.Should().Be(person.PersonDetail.PersonId);
+            personData.PersonDetail.PersonId.Should().Be(person.PersonDetail.PersonId);
+            personData.PersonDetail.Phone.Should().Be(person.PersonDetail.Phone);
+            personData.PersonDetail.Email.Should().Be(person.PersonDetail.Email);
+            personData.Addresses.ForEach(x =>
+            {
+                x.PersonId.Should().Be(person.Id);
+            });
         }
     }
 }
