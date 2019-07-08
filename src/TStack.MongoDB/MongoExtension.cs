@@ -51,17 +51,8 @@ namespace TStack.MongoDB
             var field = Item.GetProperty(propertyName);
             field.SetValue(Item, value);
         }
-        internal static MethodInfo GetFilterMethod(this object Item, string methodName)
-        {
-            return Item.GetType().GetMethods().
-                Where(x =>
-                x.Name == methodName &&
-                x.GetParameters().Count() == 1 &&
-                x.GetParameters().FirstOrDefault(y => y.Name == "filter") != null
-                ).First();
-        }
 
-        internal static object GetExpression(this Type type, string targetKey, string targetValue)
+        internal static object GetExpressionEqual(this Type type, string targetKey, string targetValue)
         {
             var body = Expression.Constant(targetValue);
             var parameter = Expression.Parameter(type);
@@ -71,18 +62,19 @@ namespace TStack.MongoDB
             var lambda = Expression.Lambda(delegateType, expression, parameter);
             return lambda;
         }
-        internal static object GetExpressionv2(this Type type, string targetKey, string targetValue)
+        internal static object GetExpressionBind(this Type type, string targetKey, string targetValue)
         {
             var body = Expression.Constant(targetValue);
             var parameter = Expression.Parameter(type);
             var property = Expression.Property(parameter, targetKey);
-            //var expression = Expression.Add(property, body);
-            //var expression1 = Expression.AddAssign(property, body);
-            var expression = Expression.Bind(property.Member, body).Expression;
-          
-            var delegateType = typeof(Func<,>).MakeGenericType(type, typeof(bool));
+            var expression = Expression.Bind(property.Member, body);
+
+            var delegateType = typeof(Func<,>).MakeGenericType(type, typeof(object));
+
+            var lamda = Expression.Lambda(delegateType, expression.Expression);
+
             //var lambda = Expression.Lambda(expression);
-            return Expression.Lambda(delegateType, expression);
+            return null;
         }
         internal static object ObjectListToSpecificTypeList(this List<object> list, Type targetType)
         {
@@ -109,6 +101,35 @@ namespace TStack.MongoDB
                 throw ex;
             }
         }
+
+
+
+
+        internal static MethodInfo GetFilterMethod(this object Item, string methodName)
+        {
+            return Item.GetMethods().
+                Where(x =>
+                x.Name == methodName &&
+                x.GetParameters().Count() == 1 &&
+                x.GetParameters().FirstOrDefault(y => y.Name == "filter") != null
+                ).First();
+        }
+        internal static MethodInfo GetInsertMethod(this object Item)
+        {
+            return Item.GetMethods().
+             FirstOrDefault(
+             x => x.Name == "Insert" &&
+             x.GetParameters().FirstOrDefault(y => y.Name == "entity") != null);
+        }
+        internal static MethodInfo GetInsertManyMethod(this object Item)
+        {
+            return Item.GetMethods().
+                FirstOrDefault(
+                 x => x.Name == "Insert" &&
+                 x.GetParameters().FirstOrDefault(y => y.Name == "entities") != null
+                 );
+        }
+        private static MethodInfo[] GetMethods(this object Item) => Item.GetType().GetMethods();
 
     }
 }

@@ -20,23 +20,22 @@ namespace TStack.MongoDB.Tests.Tests
         [Fact]
         public void Add_Record_To_Collection()
         {
-            Person person = new Person("ferhat", "candas", DateTime.Now.AddYears(-15), 2000.52);
-            List<PersonAddress> personAddresses = new List<PersonAddress>()
-            {
-                new PersonAddress("Fatih mah","a","Istanbul"),
-                new PersonAddress("Kıvanc mah","b","Izmir"),
-                new PersonAddress("Kemaliye mah","c","Trabzon"),
-            };
+            //Person person = new Person("ferhat", "candas", DateTime.Now.AddYears(-15), 2000.52);
+            //List<PersonAddress> personAddresses = new List<PersonAddress>()
+            //{
+            //    new PersonAddress("Fatih mah","a","Istanbul"),
+            //    new PersonAddress("Kıvanc mah","b","Izmir"),
+            //    new PersonAddress("Kemaliye mah","c","Trabzon"),
+            //};
 
-            var personDetail = new PersonDetail("candasferhat61@gmail.com", "905379106194");
-            person.Addresses = personAddresses;
+            //var personDetail = new PersonDetail("candasferhat61@gmail.com", "905379106194");
+            //person.Addresses = personAddresses;
             //person.PersonDetail = personDetail;
-            //personRepository.Insert(person,x=>x.Name == "test2");
-            personRepository.Insert(person,x=>x.Name == "test");
+            //personRepository.Insert(person, x => x.Name == "test" || x.Name == "test2");
 
 
-            //addressRepository.Insert(personAddresses);
-            //personDetailRepository.Insert(new PersonDetail("5cdb4fd332ef854458a18270", "candasferhat61@gmail.com", "905379106194"));
+            var personData = personRepository.First(x => x.Id == "5d23a3036f4bca70448cf6de", x => x.Name == "test" || x.Name == "test2");
+
         }
         //[Fact]
         public void MapperTest()
