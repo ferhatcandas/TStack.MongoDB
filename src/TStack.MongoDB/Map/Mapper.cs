@@ -116,9 +116,6 @@ namespace TStack.MongoDB.Map
             _rule.RuleIsValid();
             Rules.Add(_rule);
         }
-        internal IEnumerable<Rule<TEntity>> GetFilters(Func<Rule<TEntity>, bool> ruleExpression)
-        {
-            return Rules.Where(ruleExpression);
-        }
+        internal IEnumerable<Rule<TEntity>> GetFilters(Func<Rule<TEntity>, bool> ruleExpression) => Rules.Where(ruleExpression);
     }
 }
