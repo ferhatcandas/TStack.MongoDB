@@ -4,8 +4,10 @@ using System.Text;
 
 namespace TStack.MongoDB.Map
 {
-    public interface IMongoMapper<TEntity,TMap>
+    internal enum RelationType
     {
-
+        None,
+        One,
+        Collection
     }
 }

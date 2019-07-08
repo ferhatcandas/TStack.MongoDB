@@ -17,75 +17,108 @@ namespace TStack.MongoDB.Map
             Rules = new List<Rule<TEntity>>();
         }
         internal List<Rule<TEntity>> Rules { get; set; }
-        public void AddRule(Rule<TEntity> rule)
+        internal Rule<TEntity> _rule { get; set; }
+        /// <summary>
+        /// ruleName for easyly access this rule
+        /// </summary>
+        /// <param name="ruleName"></param>
+        /// <returns></returns>
+        public Mapper<TEntity> Rule(string ruleName)
         {
-            RuleIsValid(rule);
-            Rules.Add(rule);
-        }
-        private void RuleIsValid(Rule<TEntity> rule)
-        {
-            if (string.IsNullOrEmpty(rule.TargetKey))
-                throw new ArgumentNullException(rule.TargetKey);
-            if (string.IsNullOrEmpty(rule.PrimaryKey))
-                throw new ArgumentNullException(rule.PrimaryKey);
-            var type = typeof(TEntity);
-            if (type.GetProperty(rule.PrimaryKey) == null)
-                throw new ArgumentException($"{type.Name} primary key is not found");
-        }
-    }
-    public class Rule<TEntity>
-        where TEntity : IMongoEntity
-    {
-        public string RuleName { get; private set; }
-        internal string PrimaryKey { get; set; } = "Id";
-        internal string LocalFieldName { get; set; }
-        internal string TargetKey { get; set; }
-        internal Type TargetType { get; set; }
-
-        internal RelationType RelationType { get; set; } = RelationType.None;
-        public Rule<TEntity> Name(string ruleName)
-        {
-            RuleName = ruleName;
+            if (Rules.Any(x => x.Name == ruleName))
+                throw new ArgumentException($"{nameof(ruleName)} is exist on rule list");
+            _rule = new Rule<TEntity>();
+            _rule.SetName(ruleName);
             return this;
         }
-        public Rule<TEntity> Key(string primaryKey)
+        /// <summary>
+        /// currentObject key parameter
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        public Mapper<TEntity> Key<TField>(Expression<Func<TEntity, TField>> expression)
+        //where TField : struct
         {
-            PrimaryKey = primaryKey;
+            if (string.IsNullOrEmpty(_rule.PrimaryKey))
+                _rule.Key(expression.GetMemberName());
             return this;
         }
-        public Rule<TEntity> RelationKey(string relationKey)
+        /// <summary>
+        /// currentObject key parameter
+        /// </summary>
+        /// <param name="primaryKey"></param>
+        /// <returns></returns>
+        public Mapper<TEntity> Key(string primaryKey)
         {
-            if (string.IsNullOrEmpty(relationKey))
-                throw new ArgumentNullException(nameof(relationKey));
-            TargetKey = relationKey;
+            if (string.IsNullOrEmpty(_rule.PrimaryKey))
+                _rule.Key(primaryKey);
             return this;
         }
-        public Rule<TEntity> WithOne<TField>(Expression<Func<TEntity, TField>> expression)
+        /// <summary>
+        /// selected object's relationKey(propertyName)
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <returns></returns>
+        public void RelationKey(string relationKey)
+        {
+            _rule.RelationKey(relationKey);
+            AddRule();
+        }
+        /// <summary>
+        /// make relation one with selected object
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        public Mapper<TEntity> WithOne<TField>(Expression<Func<TEntity, TField>> expression)
             where TField : IMongoEntity
         {
-            if (RelationType != RelationType.None)
-                throw new ArgumentException("One rule must had one relation with model or collection");
-            RelationType = RelationType.One;
-            LocalFieldName = (expression.Body as MemberExpression).Member.Name;
-            TargetType = typeof(TField);
+            _rule.WithOne(expression);
             return this;
-
         }
-        public Rule<TEntity> WithCollection<TField>(Expression<Func<TEntity, List<TField>>> expression)
+
+        /// <summary>
+        /// make relation one with selected object and sets relation key
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        public void WithOne<TField>(Expression<Func<TEntity, TField>> expression, Expression<Func<TField, object>> relationKey)
             where TField : IMongoEntity
         {
-            if (RelationType != RelationType.None)
-                throw new ArgumentException("One rule must had one relation with model or collection");
-            RelationType = RelationType.Collection;
-            LocalFieldName = (expression.Body as MemberExpression).Member.Name;
-            TargetType = typeof(TField);
+            _rule.WithOne(expression);
+            RelationKey(relationKey.GetMemberName());
+        }
+        /// make relation many with selected object
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        public Mapper<TEntity> WithCollection<TField>(Expression<Func<TEntity, List<TField>>> expression)
+            where TField : IMongoEntity
+        {
+            _rule.WithCollection(expression);
             return this;
         }
-    }
-    internal enum RelationType
-    {
-        None,
-        One,
-        Collection
+        /// make relation many with selected object and sets relation key
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="expression"></param>
+        public void WithCollection<TField>(Expression<Func<TEntity, List<TField>>> expression, Expression<Func<TField, object>> relationKey)
+            where TField : IMongoEntity
+        {
+            _rule.WithCollection(expression);
+            RelationKey(relationKey.GetMemberName());
+        }
+        /// <summary>
+        /// add rule to list if is valid
+        /// </summary>
+        private void AddRule()
+        {
+            _rule.RuleIsValid();
+            Rules.Add(_rule);
+        }
+        internal IEnumerable<Rule<TEntity>> GetFilters(Func<Rule<TEntity>, bool> ruleExpression)
+        {
+            return Rules.Where(ruleExpression);
+        }
     }
 }
