@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Ferhat Candas</Authors>
+    <Description>This library is designed for generic architecture based on mongodb. It can be used relationally because it has mapping feature. So, can make relational queries with defined rules.</Description>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/ferhatcandas/TStack.MongoDB</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ferhatcandas/TStack.MongoDB</RepositoryUrl>
+    <PackageTags>mongodb, orm, relational, mapping, generic, repository, tstack</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +26,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
