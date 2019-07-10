@@ -25,11 +25,13 @@ dotnet add package TStack.MongoDB --version 1.0.0
 #### Paket CLI
 ```PM
 paket add TStack.MongoDB --version 1.0.0
+```
 # Usage
 
 First must define connection to access mongodb engine.
 
 For an example :
+
 ```csharp
 public class TestConnection : MongoConnection
 {
