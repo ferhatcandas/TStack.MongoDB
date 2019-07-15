@@ -67,6 +67,7 @@ namespace TStack.MongoDB.Tests.Tests
                 new PersonAddress("Kemaliye mah","c","Trabzon"),
             };
 
+
             var personDetail = new PersonDetail("candasferhat61@gmail.com", "905379106194");
 
             person.Addresses = personAddresses;
