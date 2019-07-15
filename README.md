@@ -5,7 +5,7 @@ This library is designed for generic architecture based on mongodb. **It can be 
  - Generic Repository
  - CRUD
  - Relational Mapping
- - Cluster Mode (Not yet)
+ - Cluster Mode 
 
 # Installation
 
