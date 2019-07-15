@@ -12,19 +12,19 @@ This library is designed for generic architecture based on mongodb. **It can be 
 [Nuget Package](https://www.nuget.org/packages/TStack.MongoDB/)
 #### Package Manager
 ```PM
-Install-Package TStack.MongoDB -Version 1.0.0
+Install-Package TStack.MongoDB -Version 1.0.1
 ```
 #### .NET CLI
 ```PM
-dotnet add package TStack.MongoDB --version 1.0.0
+dotnet add package TStack.MongoDB --version 1.0.1
 ```
 #### PackageReference
 ```PM
-<PackageReference Include="TStack.MongoDB" Version="1.0.0" />
+<PackageReference Include="TStack.MongoDB" Version="1.0.1" />
 ```
 #### Paket CLI
 ```PM
-paket add TStack.MongoDB --version 1.0.0
+paket add TStack.MongoDB --version 1.0.1
 ```
 # Usage
 
