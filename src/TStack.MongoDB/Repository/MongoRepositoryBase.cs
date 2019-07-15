@@ -19,21 +19,18 @@ namespace TStack.MongoDB.Repository
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TContext"></typeparam>
-    public abstract class MongoRepositoryBase<TEntity, TContext> : MongoRepositoryBase<TEntity>, IMongoRepository<TEntity>
+    public class MongoRepositoryBase<TEntity, TContext> : MongoRepositoryBase<TEntity>, IMongoRepository<TEntity>
         where TEntity : IMongoEntity
         where TContext : MongoConnection, new()
     {
-        private readonly TContext _context;
         /// <summary>
         /// 
         /// </summary>
-        public MongoRepositoryBase()
+        public MongoRepositoryBase() : base(new TContext())
         {
-            _context = new TContext();
-            Collection = Database<TEntity>.GetCollectionFromMongoConnection(_context);
         }
     }
-    public abstract class MongoRepositoryBase<TEntity, TContext, IMapper> : MongoRepositoryBase<TEntity>, IMongoRepository<TEntity, IMapper>
+    public class MongoRepositoryBase<TEntity, TContext, IMapper> : MongoRepositoryBase<TEntity>, IMongoRepository<TEntity, IMapper>
       where TEntity : IMongoEntity
       where TContext : MongoConnection, new()
       where IMapper : Mapper<TEntity>, new()
@@ -43,7 +40,7 @@ namespace TStack.MongoDB.Repository
         public MongoRepositoryBase()
         {
             _context = new TContext();
-            Collection = Database<TEntity>.GetCollectionFromMongoConnection(_context);
+            Collection = Database<TEntity>.GetCollectionFromClientConnection(_context);
             _mapper = new IMapper();
         }
         #region Insert
@@ -265,19 +262,20 @@ namespace TStack.MongoDB.Repository
             }
             return value;
         }
-        private string GetMethodName() => new StackTrace(1).GetFrame(0).GetMethod().Name;
     }
     public class MongoRepositoryBase<TEntity> : IMongoRepository<TEntity>
      where TEntity : IMongoEntity
     {
         public MongoRepositoryBase()
         {
-
+            //if (Collection == null)
+            //    throw new ArgumentNullException(nameof(Collection));
         }
         public MongoRepositoryBase(MongoConnection mongoConnection)
         {
-            Collection = Database<TEntity>.GetCollectionFromMongoConnection(mongoConnection);
+            Collection = Database<TEntity>.GetCollectionFromClientConnection(mongoConnection);
         }
+
         #region MongoSpecific
         /// <summary>
         /// mongo collection

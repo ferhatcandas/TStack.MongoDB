@@ -8,7 +8,7 @@ namespace TStack.MongoDB.Tests.Connection
 {
     public class TestConnection : MongoConnection
     {
-        public TestConnection():base("localhost",27017,"testRepo")
+        public TestConnection() : base("localhost", 27017, "testRepo")
         {
 
         }

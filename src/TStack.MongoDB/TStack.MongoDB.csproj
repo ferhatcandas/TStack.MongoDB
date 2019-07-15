@@ -8,6 +8,8 @@
     <PackageProjectUrl>https://github.com/ferhatcandas/TStack.MongoDB</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ferhatcandas/TStack.MongoDB</RepositoryUrl>
     <PackageTags>mongodb, orm, relational, mapping, generic, repository, tstack</PackageTags>
+    <Version>1.0.1</Version>
+    <PackageReleaseNotes>replicaset name added on connection</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

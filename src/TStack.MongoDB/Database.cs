@@ -7,42 +7,11 @@ using TStack.MongoDB.Entity;
 namespace TStack.MongoDB
 {
     /// <typeparam name="T">The type to get the collection of.</typeparam>
-    public class Database<T> 
+    public class Database<T>
     {
-        public IMongoCollection<T> GetCollection(MongoConnection mongoConnection)
-        {
-            var client = GetClient(mongoConnection);
+        public static IMongoCollection<T> GetCollectionFromClientConnection(MongoConnection mongoConnection) => GetDataBaseFromClient(new MongoClient(mongoConnection), mongoConnection.DatabaseName).GetCollection<T>(GetCollectionName());
 
-            return GetDataBaseFromClient(client, mongoConnection.Database).GetCollection<T>(GetCollectionName());
-        }
-        public static IMongoCollection<T> GetCollectionFromMongoConnection(MongoConnection mongoConnection)
-        {
-            var client = GetClient(mongoConnection);
-
-            return GetDataBaseFromClient(client, mongoConnection.Database).GetCollection<T>(GetCollectionName());
-        }
-        private static IMongoDatabase GetDataBaseFromClient(IMongoClient mongoClient, string databaseName)
-        {
-            return mongoClient.GetDatabase(databaseName);
-        }
-        internal static MongoClient GetClient(MongoConnection mongoConnection)
-        {
-            return new MongoClient(GetSettings(mongoConnection));
-        }
-        private static MongoClientSettings GetSettings(MongoConnection mongo)
-        {
-            MongoCredential mongoCredential = null;
-            if (!string.IsNullOrEmpty(mongo.Username))
-                mongoCredential = MongoCredential.CreateCredential(mongo.Database, mongo.Username, mongo.Password);
-            return new MongoClientSettings()
-            {
-                Server = new MongoServerAddress(mongo.Host, mongo.Port),
-                SocketTimeout = mongo.SocketTimeout,
-                ConnectTimeout = mongo.ConnectTimeout,
-                ServerSelectionTimeout = mongo.ServerSelectionTimeout,
-                Credential = mongoCredential
-            };
-        }
+        private static IMongoDatabase GetDataBaseFromClient(IMongoClient mongoClient, string databaseName) => mongoClient.GetDatabase(databaseName);
         #region Collection Name
 
         /// <summary>
